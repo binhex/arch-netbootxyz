@@ -42,7 +42,7 @@ mv /tmp/scripts-master/shell/arch/docker/*.sh /usr/local/bin/
 pacman_packages="dnsmasq"
 
 # install compiled packages using pacman
-if [[ ! -z "${pacman_packages}" ]]; then
+if [[ -n "${pacman_packages}" ]]; then
 	pacman -S --needed $pacman_packages --noconfirm
 fi
 

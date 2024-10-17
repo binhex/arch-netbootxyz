@@ -6,14 +6,17 @@ function setup() {
 	bootloader_path="/config/netbootxyz/bootloaders"
 	bootloader_path_bios="${bootloader_path}/bios"
 	bootloader_path_uefi="${bootloader_path}/uefi"
-	mkdir -p "${bootloader_path_bios}" "${bootloader_path_uefi}"
-	# TODO expose /etc/dnsmaq.conf to /config
+	dnsmasq_config_filepath="/etc/dnsmasq.conf"
+	dnsmasq_config_path="/config/netbootxyz/dnsmasq"
+
+	mkdir -p "${bootloader_path_bios}" "${bootloader_path_uefi}" "${dnsmasq_config_path}"
 
 }
 
 function check_netboot_release_version() {
 
 	# TODO check if release version changes if so download, needs to be in a loop
+	# TODO define another env var where the user decides how often to check and if to check for new netbootxyz releases
 	download="yes" # REMOVE THIS!!!
 
 	if [[ "${download}" == "yes" ]]; then
@@ -52,19 +55,14 @@ function configure_netmasq() {
 		exit 1
 	fi
 
-	dnsmasq_config_filepath="/etc/dnsmasq.conf"
-
-	# edit dnsmasq config to enable tftpm set dhcp-boot file, and disable dns
-	sed -i -e 's~^#enable-tftp.*~enable-tftp~g' "${dnsmasq_config_filepath}"
-	sed -i -e "s~^#tftp-root=.*~tftp-root=${bootloader_image_path}~g" "${dnsmasq_config_filepath}"
-	sed -i -e "s~^#dhcp-boot=.*~dhcp-boot=${bootloader_image_file}~g" "${dnsmasq_config_filepath}"
-	sed -i -e 's~^#port=.*~port=0~g' "${dnsmasq_config_filepath}"
+	# copy defakt netmasq config file to /config
+	cp "${dnsmasq_config_filepath}" "${dnsmasq_config_path}"
 
 }
 
 
 function run_dnsmasq() {
-	/usr/sbin/dnsmasq
+	/usr/sbin/dnsmasq --enable-tftp "--tftp-root=${bootloader_image_path}" "--dhcp-boot=${bootloader_image_file}" "--conf-dir=${dnsmasq_config_path}" --port=0
 }
 
 function main() {
